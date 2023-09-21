@@ -74,14 +74,15 @@ fn solve_euclid() {
     println!("Write b:");
     let b = read_integer();
 
-    println!("{}", euclid_gcd(a, b));
-    println!("{:?}", euclid_gcd_extended(a, b, 0, 0));
-    println!("{}", euclid_gcd_binary(a, b));    
+    println!("Алгоритм Евклида: {}", euclid_gcd(a, b));
+    println!("Расширенный алгоритм Евклида: {:?}",
+            euclid_gcd_extended(a, b, 0, 0));
+    println!("Бинарный алгоритм Евклида: {}", euclid_gcd_binary(a, b));    
 }
 
 
-fn print_array (arr: Vec<i32>) {
-    print!("Array: [");
+fn print_array(arr: Vec<i32>) {
+    print!("[");
     for i in 0..arr.len() {
         print!("{}", arr[i]);
         if i < arr.len() - 1 {
@@ -106,31 +107,7 @@ fn check_coprime(modules: Vec<i32>, n: i32) -> bool {
 }
 
 
-fn chinese_remainder_theorem () -> i32 {
-    println!("Print comparison amount: ");
-    let n = read_integer();
-    
-
-    println!("Print u values: ");
-    let mut u_values: Vec<i32> = Vec::new();
-    for i in 0..n {
-        let u = read_integer();
-        u_values.push(u);
-    }
-
-    println!("Print modules: ");
-    let mut modules: Vec<i32> = Vec::new();
-    for i in 0..n {
-        let m = read_integer();
-        modules.push(m);
-    }
-
-    // check if modules is coprime
-    if !!!check_coprime(modules.clone(), n) {
-        println!("Some modules aren't coprime!");
-        return 1;
-    }
-
+fn chinese_remainder_theorem(u_values: Vec<i32>, modules: Vec<i32>, n: i32) -> i32 {
     let mut big_m: i32 = 1;
     for i in 0..n {
         big_m *= modules[i as usize];
@@ -159,30 +136,7 @@ fn chinese_remainder_theorem () -> i32 {
 }
 
 
-fn harner_algorithm () -> i32 {
-    println!("Print comparison amount: ");
-    let n = read_integer();
-    
-    println!("Print u values: ");
-    let mut u_values: Vec<i32> = Vec::new();
-    for i in 0..n {
-        let u = read_integer();
-        u_values.push(u);
-    }
-
-    println!("Print modules: ");
-    let mut modules: Vec<i32> = Vec::new();
-    for i in 0..n {
-        let m = read_integer();
-        modules.push(m);
-    }
-
-    // check if modules is coprime
-    if !!!check_coprime(modules.clone(), n) {
-        println!("Some modules aren't coprime!");
-        return 1;
-    }
-
+fn harner_algorithm(u_values: Vec<i32>, modules: Vec<i32>, n: i32) -> i32 {
     let mut coeffs: Vec<Vec<i32>> = Vec::new();
 
     for i in 0..n {
@@ -221,16 +175,86 @@ fn harner_algorithm () -> i32 {
 }
 
 
-fn gauss () -> i32 {
-    println!("Print equation amount: ");
+fn solve_comparison() -> i32 {
+    println!("Print comparison amount: ");
     let n = read_integer();
     
+
+    println!("Print u values: ");
+    let mut u_values: Vec<i32> = Vec::new();
+    for i in 0..n {
+        let u = read_integer();
+        u_values.push(u);
+    }
+
+    println!("Print modules: ");
+    let mut modules: Vec<i32> = Vec::new();
+    for i in 0..n {
+        let m = read_integer();
+        modules.push(m);
+    }
+
+    // check if modules is coprime
+    if !check_coprime(modules.clone(), n) {
+        println!("Some modules aren't coprime!");
+        return 1;
+    }
+
+    println!("Греко-китайская теорема: ");
+    chinese_remainder_theorem(u_values.clone(), modules.clone(), n);
+    println!("Алгоритм Гарнера: ");
+    harner_algorithm(u_values.clone(), modules.clone(), n);
+    return 0;
+}
+
+
+fn check_if_trivial(coeffs: Vec<i32>, b: i32) -> i32 {
+    let mut is_cf_zeros: bool = true;
+    for i in 0..coeffs.len() {
+        if coeffs[i as usize] != 0 {
+            is_cf_zeros = false;
+            break;
+        }
+    }
+
+    if is_cf_zeros && b == 0 {
+        return 1;
+    }
+
+    if is_cf_zeros && b != 0 {
+        return -1;
+    }
+
+    return 0;
+}
+
+
+fn mod_inverse(a: i32, n: i32) -> i32 {
+    let (_, g, x, _) = euclid_gcd_extended(a, n, 0, 0);
+    if g != 1 {
+        return -1;
+    } else {
+        let result = (x % n + n) % n;
+        return result;
+    }
+}
+
+fn gauss () -> i32 {
+    println!("Print equation amount: ");
+    let mut n = read_integer();
+    
+    println!("Print unknown amount: ");
+    let mut m = read_integer();
+
+    println!("Print module: ");
+    let mut p = read_integer();
+
     println!("Print coefficients: ");
     let mut a_values: Vec<Vec<i32>> = Vec::new();
     for i in 0..n {
-        println!("Print coeffs for first equation:");
+        println!("Print coeffs for {} equation:", i);
         let mut a_line: Vec<i32> = Vec::new();
-        for j in 0..n {
+        for j in 0..m {
             let a = read_integer();
             a_line.push(a);   
         }
@@ -244,15 +268,81 @@ fn gauss () -> i32 {
         terms.push(t);
     }
 
-    
+    let mut x: Vec<i32> = vec![0; m as usize];
 
+    for i in 0..n {
+        let mut is_trivial: i32 = check_if_trivial(a_values[i as usize].clone(),
+                                                   terms[i as usize].clone());
+        if is_trivial == -1 {
+            println!("Система не имеет решений!");
+            return 0;
+        }
+
+        let mut inv: i32 = mod_inverse(a_values[i as usize][i as usize], p);
+
+        for j in i..m {
+            a_values[i as usize][j as usize] = (a_values[i as usize][j as usize] * inv).rem_euclid(p);
+        }
+
+        terms[i as usize] = (terms[i as usize] * inv).rem_euclid(p);
+
+        for k in (i + 1)..n {
+            let mut fact: i32 = a_values[k as usize][i as usize];
+            terms[k as usize] = (terms[k as usize] - terms[i as usize]  * fact).rem_euclid(p);
+            if terms[k as usize] < 0 {
+                terms[k as usize] += p;
+            }
+
+            for j in 0..m {
+                a_values[k as usize][j as usize] = (a_values[k as usize][j as usize] - a_values[i as usize][j as usize] * fact).rem_euclid(p);
+
+                if a_values[k as usize][j as usize] < 0 {
+                    a_values[k as usize][j as usize] += p;
+                }
+            }
+        }
+    }
+
+    for j in (0..terms.len()).rev() {
+        x[j as usize] = terms[j as usize];
+        for k in (j + 1)..m as usize{
+            x[j as usize] = (x[j as usize] - a_values[j as usize][k as usize] * x[k as usize]).rem_euclid(p);
+            if x[j as usize] < 0 {
+                x[j as usize] += p;
+            }
+        }
+
+        let mut inv: i32 = mod_inverse(a_values[j as usize][j as usize], p);
+        x[j as usize] = (x[j as usize] * inv).rem_euclid(p);
+    }
+
+    println!("Методом Гаусса получена разряженная матрица:");
+    for i in 0..n {
+        let cur_line = &mut a_values[i as usize];
+        cur_line.push(terms[i as usize]);
+        print_array(cur_line.clone());
+    }
+    println!("Частное решение системы:");
+    print_array(x);
+    println!("Общее решение системы:");
+    for i in 0..n {
+        if x[i as usize] == 0 {
+            println!("x_{} = {}", i + 1, 0)
+        }
+        else {
+            let mut ans: Vec<i32> = Vec::new();
+            ans.push(terms[i as usize]);
+            for j in 0..m {
+                ans.push(a_values[i as usize][j as usize])
+            }
+        }
+    }
     return 0;
 }
 
 
 fn main() {
     // solve_euclid();
-    // chinese_remainder_theorem();
-    // harner_algorithm();
+    // solve_comparison();
     gauss();
 }
