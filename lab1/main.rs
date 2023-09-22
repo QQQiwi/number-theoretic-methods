@@ -68,10 +68,10 @@ fn euclid_gcd_binary(a: i32, b: i32) -> i32 {
 
 
 fn solve_euclid() {
-    println!("Write a:");
+    println!("Введите число a:");
     let a = read_integer();
 
-    println!("Write b:");
+    println!("Введите число b:");
     let b = read_integer();
 
     println!("Алгоритм Евклида: {}", euclid_gcd(a, b));
@@ -116,8 +116,8 @@ fn chinese_remainder_theorem(u_values: Vec<i32>, modules: Vec<i32>, n: i32) -> i
     let mut params: Vec<i32> = Vec::new();
     let mut bezouts: Vec<i32> = Vec::new();
     for i in 0..n {
-        let mut cur_m: i32 = modules[i as usize];
-        let mut cur_param: i32 = big_m / cur_m;
+        let cur_m: i32 = modules[i as usize];
+        let cur_param: i32 = big_m / cur_m;
         params.push(cur_param);
 
         let (_, _, inv, _) = euclid_gcd_extended(cur_param, cur_m, 0, 0);
@@ -175,36 +175,35 @@ fn harner_algorithm(u_values: Vec<i32>, modules: Vec<i32>, n: i32) -> i32 {
 }
 
 
-fn solve_comparison() -> i32 {
-    println!("Print comparison amount: ");
+fn solve_comparison() -> () {
+    println!("Введите число сравнений: ");
     let n = read_integer();
     
 
-    println!("Print u values: ");
+    println!("Введите значения u: ");
     let mut u_values: Vec<i32> = Vec::new();
-    for i in 0..n {
+    for _i in 0..n {
         let u = read_integer();
         u_values.push(u);
     }
 
-    println!("Print modules: ");
+    println!("Введите модули сравнений: ");
     let mut modules: Vec<i32> = Vec::new();
-    for i in 0..n {
+    for _i in 0..n {
         let m = read_integer();
         modules.push(m);
     }
 
-    // check if modules is coprime
     if !check_coprime(modules.clone(), n) {
-        println!("Some modules aren't coprime!");
-        return 1;
+        println!("Некоторые модули не взаимнопросты!");
+        return ();
     }
 
     println!("Греко-китайская теорема: ");
     chinese_remainder_theorem(u_values.clone(), modules.clone(), n);
     println!("Алгоритм Гарнера: ");
     harner_algorithm(u_values.clone(), modules.clone(), n);
-    return 0;
+    return ();
 }
 
 
@@ -239,31 +238,31 @@ fn mod_inverse(a: i32, n: i32) -> i32 {
     }
 }
 
-fn gauss () -> i32 {
-    println!("Print equation amount: ");
-    let mut n = read_integer();
+fn gauss () -> () {
+    println!("Введите число уравнений: ");
+    let n = read_integer();
     
-    println!("Print unknown amount: ");
-    let mut m = read_integer();
+    println!("Введите число неизвестных: ");
+    let m = read_integer();
 
-    println!("Print module: ");
-    let mut p = read_integer();
+    println!("Введите модуль: ");
+    let p = read_integer();
 
-    println!("Print coefficients: ");
+    println!("Введите коэффициенты: ");
     let mut a_values: Vec<Vec<i32>> = Vec::new();
     for i in 0..n {
-        println!("Print coeffs for {} equation:", i);
+        println!("Введите коэффициенты {}-го уравнения:", i + 1);
         let mut a_line: Vec<i32> = Vec::new();
-        for j in 0..m {
+        for _j in 0..m {
             let a = read_integer();
             a_line.push(a);   
         }
         a_values.push(a_line);
     }
 
-    println!("Print constant terms:");
+    println!("Введите свободные коэффициенты:");
     let mut terms: Vec<i32> = Vec::new();
-    for j in 0..n {
+    for _j in 0..n {
         let t = read_integer();
         terms.push(t);
     }
@@ -271,14 +270,14 @@ fn gauss () -> i32 {
     let mut x: Vec<i32> = vec![0; m as usize];
 
     for i in 0..n {
-        let mut is_trivial: i32 = check_if_trivial(a_values[i as usize].clone(),
-                                                   terms[i as usize].clone());
+        let is_trivial: i32 = check_if_trivial(a_values[i as usize].clone(),
+                                               terms[i as usize].clone());
         if is_trivial == -1 {
             println!("Система не имеет решений!");
-            return 0;
+            return ();
         }
 
-        let mut inv: i32 = mod_inverse(a_values[i as usize][i as usize], p);
+        let inv: i32 = mod_inverse(a_values[i as usize][i as usize], p);
 
         for j in i..m {
             a_values[i as usize][j as usize] = (a_values[i as usize][j as usize] * inv).rem_euclid(p);
@@ -287,7 +286,7 @@ fn gauss () -> i32 {
         terms[i as usize] = (terms[i as usize] * inv).rem_euclid(p);
 
         for k in (i + 1)..n {
-            let mut fact: i32 = a_values[k as usize][i as usize];
+            let fact: i32 = a_values[k as usize][i as usize];
             terms[k as usize] = (terms[k as usize] - terms[i as usize]  * fact).rem_euclid(p);
             if terms[k as usize] < 0 {
                 terms[k as usize] += p;
@@ -312,7 +311,7 @@ fn gauss () -> i32 {
             }
         }
 
-        let mut inv: i32 = mod_inverse(a_values[j as usize][j as usize], p);
+        let inv: i32 = mod_inverse(a_values[j as usize][j as usize], p);
         x[j as usize] = (x[j as usize] * inv).rem_euclid(p);
     }
 
@@ -323,26 +322,51 @@ fn gauss () -> i32 {
         print_array(cur_line.clone());
     }
     println!("Частное решение системы:");
-    print_array(x);
+    print_array(x.clone());
     println!("Общее решение системы:");
-    for i in 0..n {
+    for i in 0..m {
         if x[i as usize] == 0 {
             println!("x_{} = {}", i + 1, 0)
         }
         else {
-            let mut ans: Vec<i32> = Vec::new();
-            ans.push(terms[i as usize]);
+            let mut ans = String::from("");
             for j in 0..m {
-                ans.push(a_values[i as usize][j as usize])
+                let cur_a = a_values[i as usize][j as usize];
+                if i != j {
+                    if cur_a > 0 {
+                        ans.push_str(" - ");
+                        ans.push_str(&cur_a.to_string());
+                    }
+                    if cur_a < 0 {
+                        ans.push_str(" + ");
+                        ans.push_str(&(-cur_a).to_string());
+                    }
+                    if cur_a != 0
+                    {
+                        ans.push('x');
+                        ans.push_str(&(j + 1).to_string());
+                    }
+                }
             }
+            println!("x_{} = ({}{}) / {}", i + 1, terms[i as usize], ans, a_values[i as usize][i as usize])
         }
     }
-    return 0;
+    return ();
 }
 
 
 fn main() {
-    // solve_euclid();
-    // solve_comparison();
-    gauss();
+    println!("Выберите опцию:");
+    println!("1 - алгоритмы Евклида;");    
+    println!("2 - Греко-китайская теоремаа и алгоритм Гарнера;");    
+    println!("3 - алгоритм Гаусса;");
+
+    let n = read_integer();
+
+    match n {
+        1 => solve_euclid(),
+        2 => solve_comparison(),
+        3 => gauss(),
+        _ => println!("Введено неверное число!"),
+    }
 }
