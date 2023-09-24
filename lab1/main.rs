@@ -228,6 +228,19 @@ fn check_if_trivial(coeffs: Vec<i32>, b: i32) -> i32 {
 }
 
 
+fn check_correct(a_values: Vec<Vec<i32>>, b: Vec<i32>, x: Vec<i32>) -> i32 {
+    for i in 0..a_values.len() {
+        let mut ans = 0;
+        for j in 0..a_values[i as usize].len() {
+            ans += a_values[i as usize][j as usize] * x[j as usize];
+        }
+        if ans != b[i as usize] {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 fn mod_inverse(a: i32, n: i32) -> i32 {
     let (_, g, x, _) = euclid_gcd_extended(a, n, 0, 0);
     if g != 1 {
@@ -315,12 +328,20 @@ fn gauss () -> () {
         x[j as usize] = (x[j as usize] * inv).rem_euclid(p);
     }
 
+    let a_bef_matrix: Vec<Vec<i32>> = a_values.clone();
+
     println!("Методом Гаусса получена разряженная матрица:");
     for i in 0..n {
         let cur_line = &mut a_values[i as usize];
         cur_line.push(terms[i as usize]);
         print_array(cur_line.clone());
     }
+    
+    if check_correct(a_bef_matrix.clone(), terms.clone(), x.clone()) == 0 {
+        println!("Система не имеет решений!");
+        return ();
+    }
+
     println!("Частное решение системы:");
     print_array(x.clone());
     println!("Общее решение системы:");
@@ -330,8 +351,10 @@ fn gauss () -> () {
         }
         else {
             let mut ans = String::from("");
+            let x_inv: i32 = mod_inverse(a_values[i as usize][i as usize], p);
             for j in 0..m {
-                let cur_a = a_values[i as usize][j as usize];
+                let cur_a = (a_values[i as usize][j as usize] * x_inv).rem_euclid(p);
+                
                 if i != j {
                     if cur_a > 0 {
                         ans.push_str(" - ");
@@ -348,7 +371,7 @@ fn gauss () -> () {
                     }
                 }
             }
-            println!("x_{} = ({}{}) / {}", i + 1, terms[i as usize], ans, a_values[i as usize][i as usize])
+            println!("x_{} = {}{}", i + 1, terms[i as usize], ans);
         }
     }
     return ();
@@ -358,7 +381,7 @@ fn gauss () -> () {
 fn main() {
     println!("Выберите опцию:");
     println!("1 - алгоритмы Евклида;");    
-    println!("2 - Греко-китайская теоремаа и алгоритм Гарнера;");    
+    println!("2 - Греко-китайская теорема и алгоритм Гарнера;");    
     println!("3 - алгоритм Гаусса;");
 
     let n = read_integer();
